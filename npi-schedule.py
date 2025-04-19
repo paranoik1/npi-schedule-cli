@@ -142,7 +142,8 @@ def __print_data_frame(array: list, columns: list):
 		columns=columns
 	)
 
-	print(data_frame)
+	if not data_frame.empty:
+		print(data_frame.to_string(index=False))
 
 
 def __print_schedule(data: dict, date: str, append_function, columns):
