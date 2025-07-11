@@ -3,7 +3,7 @@ import requests as req
 import pandas as pd
 
 from datetime import datetime
-from argparse import ArgumentParser, RawTextHelpFormatter
+from argparse import ArgumentParser, RawTextHelpFormatter, Action
 
 
 pd.options.display.max_colwidth = 1000
@@ -84,6 +84,8 @@ SUBCOMMANDS_ALIASES = [
 	("auditoriums", "a")
 ]
 
+max_column_width: int | None = None
+
 
 def add_argument_date(parser: ArgumentParser):
 	parser.add_argument("-d", "--date", help="Дата (Year-month-day) или же список дат через запятую, по умолчанию сегодняшняя: " + NOW_DATE, default=NOW_DATE)
@@ -91,6 +93,7 @@ def add_argument_date(parser: ArgumentParser):
 
 def get_args():
 	parser = ArgumentParser("npi-schedule", description="Расписание пар НПИ")
+	parser.add_argument("-m", "--max-col-width", help="Максимальная ширина колонки при выводе", type=int)
 
 	subparsers = parser.add_subparsers(dest="subcommand")
 
@@ -131,7 +134,7 @@ def get_args():
 	return parser.parse_args()
 
 
-def __get_json_response(url: str, *args, **kwargs):
+def get_json_response(url: str, *args, **kwargs):
 	response = req.get(url if url.startswith("http") else API_URL + url, *args, **kwargs)
 	return response.json()
 
@@ -143,7 +146,7 @@ def __print_data_frame(array: list, columns: list):
 	)
 
 	if not data_frame.empty:
-		print(data_frame.to_string(index=False))
+		print(data_frame.to_string(index=False, max_colwidth=max_column_width))
 
 
 def __print_schedule(data: dict, date: str, append_function, columns):
@@ -177,14 +180,13 @@ def __print_schedule(data: dict, date: str, append_function, columns):
 		for date, lessons in lessons_dict.items():
 			print("Расписание на " + date)
 			__print_data_frame(lessons, columns)
-			print()
 	else:
 		__print_data_frame(lesson_list, columns)
 
 
 
 def print_student_schedule(group: str, facult: str, course: int | str, date: str):
-	data = __get_json_response(f'v2/faculties/{facult}/years/{course}/groups/{group}/schedule')
+	data = get_json_response(f'v2/faculties/{facult}/years/{course}/groups/{group}/schedule')
 
 	__print_schedule(
 		data=data,
@@ -200,7 +202,7 @@ def print_student_schedule(group: str, facult: str, course: int | str, date: str
 
 
 def print_lecturer_schedule(lecturer: str, date: str):
-	data = __get_json_response(f"v2/lecturers/{lecturer}/schedule")
+	data = get_json_response(f"v2/lecturers/{lecturer}/schedule")
 
 	print("Лектор: " + data.get("lecturer"))
 
@@ -218,7 +220,7 @@ def print_lecturer_schedule(lecturer: str, date: str):
 
 
 def print_auditorium_schedule(auditorium: str, date: str):
-	data = __get_json_response(f"v2/auditoriums/{auditorium}/schedule")
+	data = get_json_response(f"v2/auditoriums/{auditorium}/schedule")
 
 	__print_schedule(
 		data=data,
@@ -234,13 +236,13 @@ def print_auditorium_schedule(auditorium: str, date: str):
 
 
 def print_found_lecturers(query: str):
-	data = __get_json_response('v1/lecturers/' + query)
+	data = get_json_response('v1/lecturers/' + query)
 	for lecturer in data:
 		print(lecturer)
 
 
 def print_found_auditoriums(query: str):
-	data = __get_json_response('v1/auditoriums/' + query)
+	data = get_json_response('v1/auditoriums/' + query)
 
 	for corpus, auditoriums in data.items():
 		print("Корпус:", corpus)
@@ -250,6 +252,7 @@ def print_found_auditoriums(query: str):
 
 args = get_args()
 subcommand = args.subcommand
+max_column_width = args.max_col_width
 
 if subcommand in SUBCOMMANDS_ALIASES[0]:
 	print_student_schedule(args.group, args.facult, args.course, args.date)
@@ -258,7 +261,7 @@ elif subcommand in SUBCOMMANDS_ALIASES[1]:
 		print_found_lecturers(args.query)
 	else:
 		print_lecturer_schedule(args.lecturer, args.date)
-else:
+elif subcommand in SUBCOMMANDS_ALIASES[2]:
 	if args.function == "search":
 		print_found_auditoriums(args.query)
 	else:
