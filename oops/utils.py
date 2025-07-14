@@ -1,7 +1,7 @@
-from datetime import datetime
-import pandas
 from argparse import ArgumentParser
+from datetime import datetime
 
+import pandas
 
 pandas.options.display.expand_frame_repr = False
 
@@ -29,8 +29,10 @@ def print_data_frame(data: list, columns: list):
     data_frame = pandas.DataFrame(data, columns=columns)
 
     if not data_frame.empty:
-        data_frame_string = data_frame.to_string(index=False, max_colwidth=pandas.options.display.max_colwidth)
-        
+        data_frame_string = data_frame.to_string(
+            index=False, max_colwidth=pandas.options.display.max_colwidth
+        )
+
         print(data_frame_string)
 
 

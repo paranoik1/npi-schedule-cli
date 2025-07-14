@@ -1,7 +1,7 @@
-import requests
-from argparse import _SubParsersAction, ArgumentParser, Namespace
-
+from argparse import ArgumentParser, Namespace, _SubParsersAction
 from typing import Any
+
+import requests
 
 
 class ApiEndpoint:
@@ -14,7 +14,7 @@ class ApiEndpoint:
         response = requests.get(self.url.format(*url_args, **url_kwargs))
         if response.status_code != 200:
             raise requests.HTTPError(response.status_code)
-        
+
         return response.json()
 
 
@@ -23,9 +23,10 @@ class Printer:
         raise NotImplementedError()
 
 
-
 class CliMethod:
-    def __init__(self, subparsers: _SubParsersAction, api_endpoint: ApiEndpoint, printer: Printer) -> None:
+    def __init__(
+        self, subparsers: _SubParsersAction, api_endpoint: ApiEndpoint, printer: Printer
+    ) -> None:
         self.subparsers = subparsers
         self.api_endpoint = api_endpoint
         self.printer = printer
@@ -37,7 +38,7 @@ class CliMethod:
 
     def _add_args(self):
         raise NotImplementedError()
-    
+
     def get_data(self, *url_args, **url_kwargs):
         return self.api_endpoint(*url_args, **url_kwargs)
 

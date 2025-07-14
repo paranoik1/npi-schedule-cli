@@ -1,17 +1,18 @@
 from typing import Any, Callable
+
 from core import Printer
-
-
 from utils import print_data_frame
 
 
 class SchedulePrinter(Printer):
-    def _print_schedule_list(self, data: dict, date: set[str], columns: list[str], append_function: Callable):
+    def _print_schedule_list(
+        self, data: dict, date: set[str], columns: list[str], append_function: Callable
+    ):
         lessons_dict = {}
 
         for info in data["classes"]:
             dates = info["dates"]
-            if not ( date & set(dates) ):
+            if not (date & set(dates)):
                 continue
 
             lesson = info.copy()
@@ -22,14 +23,14 @@ class SchedulePrinter(Printer):
                 lessons_dict[new_date] = []
 
             append_function(lesson, lessons_dict[new_date])
-                
 
         for date, lessons in lessons_dict.items():
             print("\nРасписание на " + date)
             print_data_frame(lessons, columns)
 
-
-    def _print_schedule(self, data: dict, date: str, columns: list[str], append_function: Callable):
+    def _print_schedule(
+        self, data: dict, date: str, columns: list[str], append_function: Callable
+    ):
         lesson_list = []
         for info in data["classes"]:
             dates = info["dates"]
@@ -40,8 +41,9 @@ class SchedulePrinter(Printer):
 
         print_data_frame(lesson_list, columns)
 
-
-    def __call__(self, data: Any, date: str | set, columns: list[str], append_function) -> Any:
+    def __call__(
+        self, data: Any, date: str | set, columns: list[str], append_function
+    ) -> Any:
         if isinstance(date, str):
             print_function = self._print_schedule
         else:
@@ -49,7 +51,7 @@ class SchedulePrinter(Printer):
             print_function = self._print_schedule_list
 
         print_function(data, date, columns, append_function)
-        
+
 
 # FIXME: Компактность или читаемость? Что же выбрать?
 #

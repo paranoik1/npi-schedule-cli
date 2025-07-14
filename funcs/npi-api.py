@@ -1,10 +1,9 @@
 #!/usr/bin/env python
-import requests as req
-import pandas as pd
-
-from datetime import datetime
 from argparse import ArgumentParser, RawTextHelpFormatter
+from datetime import datetime
 
+import pandas as pd
+import requests as req
 
 pd.options.display.max_colwidth = 1000
 pd.options.display.expand_frame_repr = False
