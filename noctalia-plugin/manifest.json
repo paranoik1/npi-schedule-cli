@@ -1,0 +1,10 @@
+{
+    "id": "npi-schedule-plugin",
+    "name": "NPI Schedule Plugin",
+    "version": "0.1.0",
+    "author": "paranoik1",
+    "description": "Плагин для просмотра расписания пар для НПИ",
+    "entryPoints": {
+        "desktopWidget": "DesktopWidget.qml"
+    }
+}

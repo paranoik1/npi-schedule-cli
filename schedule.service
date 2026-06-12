@@ -1,0 +1,9 @@
+[Unit]
+Description=NPI schedule service
+
+[Service]
+ExecStart=sh ./schedule.sh
+OnBootSec=10s
+
+[Install]
+WantedBy=default.target

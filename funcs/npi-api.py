@@ -1,6 +1,7 @@
-#!/usr/bin/env python
+#!./.venv/bin/python
 from argparse import ArgumentParser, RawTextHelpFormatter
 from datetime import datetime
+from typing import Callable
 
 import pandas as pd
 import requests as req
@@ -36,6 +37,14 @@ SUBCOMMANDS_ALIASES = [("student", "s"), ("lecturers", "l"), ("auditoriums", "a"
 max_column_width: int | None = None
 
 
+def add_argument_max_col_width(parser: ArgumentParser):
+    parser.add_argument(
+        "-m", "--max-col-width",
+        help="Максимальная ширина колонки при выводе",
+        type=int,
+    )
+
+
 def add_argument_date(parser: ArgumentParser):
     parser.add_argument(
         "-d",
@@ -48,13 +57,11 @@ def add_argument_date(parser: ArgumentParser):
 
 def get_args():
     parser = ArgumentParser("npi-schedule", description="Расписание пар НПИ")
-    parser.add_argument(
-        "-m", "--max-col-width", help="Максимальная ширина колонки при выводе", type=int
-    )
+    add_argument_max_col_width(parser)
 
     subparsers = parser.add_subparsers(dest="subcommand")
 
-    # Подкоманда для получения расписания студентов
+    ### NOTE: Подкоманда для получения расписания студентов ###
     epilog = "Список кодов факультетов (-f):\n" + "\n".join(
         [
             key + " - " + value["code"] + " - " + value["name"]
@@ -74,12 +81,16 @@ def get_args():
         "-f", "--facult", help="Факультет", choices=FACULTIES.keys(), required=True
     )
     student_parser.add_argument("-c", "--course", help="Курс", default=1)
+    student_parser.add_argument("-0", "--finals-schedule", action="store_true", help="Расписание зачетной недели", default=False, )
     add_argument_date(student_parser)
+    add_argument_max_col_width(student_parser)
 
-    # Подкоманда для работы с лекторами
+
+    ### NOTE: Подкоманда для работы с лекторами ###
     lectors_parser = subparsers.add_parser(
         SUBCOMMANDS_ALIASES[1][0], aliases=SUBCOMMANDS_ALIASES[1][0:]
     )
+    add_argument_max_col_width(lectors_parser)
     lectors_subparsers = lectors_parser.add_subparsers(
         dest="function", required=True, help="Действия с лекторами"
     )
@@ -88,6 +99,7 @@ def get_args():
     lector_searh_parser.add_argument(
         "query", help="Фамилия или часть фамилии для поиска"
     )
+    add_argument_max_col_width(lector_searh_parser)
 
     lector_schedule_parser = lectors_subparsers.add_parser(
         "schedule", help="Получение расписания лектора"
@@ -96,11 +108,15 @@ def get_args():
         "lecturer", help='Фамилия и инициалы лектора в формате "Фамилия И О"'
     )
     add_argument_date(lector_schedule_parser)
+    add_argument_max_col_width(lector_schedule_parser)
 
-    # Подкоманда для работы с аудиториями
+
+    ### NOTE: Подкоманда для работы с аудиториями ###
     auditoriums_parser = subparsers.add_parser(
         SUBCOMMANDS_ALIASES[2][0], aliases=SUBCOMMANDS_ALIASES[2][0:]
     )
+    add_argument_max_col_width(auditoriums_parser)  # <-- ДОБАВЛЕНО
+
     auditoriums_subparsers = auditoriums_parser.add_subparsers(
         dest="function", required=True, help="Действия с аудиториями"
     )
@@ -111,12 +127,14 @@ def get_args():
     auditorium_searh_parser.add_argument(
         "query", help="Номер или часть номер для поиска"
     )
+    add_argument_max_col_width(auditorium_searh_parser)  # <-- ДОБАВЛЕНО
 
     auditorium_schedule_parser = auditoriums_subparsers.add_parser(
         "schedule", help="Получение расписания аудитории"
     )
     auditorium_schedule_parser.add_argument("auditorium", help="Аудитория")
     add_argument_date(auditorium_schedule_parser)
+    add_argument_max_col_width(auditorium_schedule_parser)  # <-- ДОБАВЛЕНО
 
     return parser.parse_args()
 
@@ -128,33 +146,42 @@ def get_json_response(url: str, *args, **kwargs):
     return response.json()
 
 
-def __print_data_frame(array: list, columns: list):
+def __print_data_frame(array: list[dict], columns: list[str]):
     data_frame = pd.DataFrame(array, columns=columns)
 
     if not data_frame.empty:
         print(data_frame.to_string(index=False, max_colwidth=max_column_width))
 
 
-def __print_schedule(data: dict, date: str, append_function, columns):
+def __print_schedule(data: dict, date: str, append_function: Callable[[dict, list], None], columns: list[str], data_info: list[dict] | None = None):
     if "," in date:
         date = set(date.split(","))
 
+    def get_set_dates(dates: list[str] | str):
+        return set(dates if isinstance(dates, list) else [dates])
+
     is_date_type_set = isinstance(date, set)
     check_condition = lambda dates: (
-        date & set(dates) if is_date_type_set else date in dates
+        date & get_set_dates(dates) if is_date_type_set else date in dates 
     )
 
     lesson_list = []
     lessons_dict = {}
 
-    for info in data["classes"]:
-        dates = info["dates"]
-        if not check_condition(dates):
+    if not data_info:
+        data_info = data.get("classes", [])
+
+    for info in data_info:
+        _dates = info.get("dates")
+        if not _dates:
+            _dates = info.get("date")
+
+        if not check_condition(_dates):
             continue
 
         lesson = info.copy()
         if is_date_type_set:
-            intersection_date = date & set(dates)
+            intersection_date = date & get_set_dates(_dates)
             new_date = list(intersection_date)[0]
 
             if not (intersection_date & set(lessons_dict.keys())):
@@ -168,28 +195,45 @@ def __print_schedule(data: dict, date: str, append_function, columns):
         for date, lessons in lessons_dict.items():
             print("Расписание на " + date)
             __print_data_frame(lessons, columns)
+            print()
     else:
         __print_data_frame(lesson_list, columns)
 
 
-def print_student_schedule(group: str, facult: str, course: int | str, date: str):
+def print_student_schedule(group: str, facult: str, course: int | str, date: str, is_finals_schedule: bool = False):
     data = get_json_response(
-        f"v2/faculties/{facult}/years/{course}/groups/{group}/schedule"
+        f"v2/faculties/{facult}/years/{course}/groups/{group}/{"finals-schedule" if is_finals_schedule else "schedule"}" 
     )
 
-    __print_schedule(
-        data=data,
-        date=date,
-        append_function=lambda lesson, array: array.append(
-            [
-                TIMES[lesson["class"]],
-                lesson["auditorium"],
-                lesson["type"] + "-" + lesson["discipline"],
-                lesson["lecturer"],
-            ]
-        ),
-        columns=["Начало", "Аудитория", "Дисциплина", "Прдподаватель"],
-    )
+    if is_finals_schedule:
+        __print_schedule(
+            data=data,
+            date=date,
+            append_function=lambda lesson, array: array.append(
+                [
+                    lesson["start"] + "-" + lesson["end"],
+                    lesson["auditorium"],
+                    lesson["type"] + "-" + lesson["discipline"],
+                    lesson["lecturer"],
+                ]
+            ),
+            columns=["Период", "Аудитория", "Дисциплина", "Прдподаватель"],
+            data_info=data
+        )
+    else:
+        __print_schedule(
+            data=data,
+            date=date,
+            append_function=lambda lesson, array: array.append(
+                [
+                    TIMES[lesson["class"]],
+                    lesson["auditorium"],
+                    lesson["type"] + "-" + lesson["discipline"],
+                    lesson["lecturer"],
+                ]
+            ),
+            columns=["Начало", "Аудитория", "Дисциплина", "Прдподаватель"]
+        )
 
 
 def print_lecturer_schedule(lecturer: str, date: str):
@@ -250,7 +294,7 @@ subcommand = args.subcommand
 max_column_width = args.max_col_width
 
 if subcommand in SUBCOMMANDS_ALIASES[0]:
-    print_student_schedule(args.group, args.facult, args.course, args.date)
+    print_student_schedule(args.group, args.facult, args.course, args.date, args.finals_schedule)
 elif subcommand in SUBCOMMANDS_ALIASES[1]:
     if args.function == "search":
         print_found_lecturers(args.query)
