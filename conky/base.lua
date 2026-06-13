@@ -13,7 +13,7 @@ conky.config = {
     draw_outline = false,
     draw_shades = false,
     extra_newline = false,
-    font = 'Fira Code:size=14',
+    font = 'Monospace:size=12',
     net_avg_samples = 2,
     no_buffers = true,
     out_to_console = false,

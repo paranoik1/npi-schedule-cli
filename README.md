@@ -122,6 +122,8 @@ npi-schedule a schedule 310ГЛ -d 2025-09-01,2025-09-02
 
 ## NoctaliaShell плагин
 
+![NoctaliaShell плагин](readme/plugin.png)
+
 Включает:
 - DesktopWidget с расписанием на сегодня/завтра
 - HTTP-демон (`schedule-httpd.service`) для подачи файлов плагину
@@ -132,6 +134,8 @@ npi-schedule a schedule 310ГЛ -d 2025-09-01,2025-09-02
 После установки плагина перезагрузите Noctalia Shell, чтобы он появился в списке виджетов.
 
 ## Conky-виджет
+
+![Conky-виджет](readme/conky.png)
 
 Конфиг `conky/schedule.lua` (вместе с `base.lua`, `colors.lua`) отображает расписание на рабочем столе.
 Установка: `make install-conky`
