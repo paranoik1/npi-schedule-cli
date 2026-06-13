@@ -1,0 +1,19 @@
+#!/bin/bash
+# Читает настройки из ~/.config/schedule/config.json и вызывает npi-schedule.
+# Позволяет переопределить аргументы через переменные окружения:
+#   FACULT, GROUP, COURSE, NPI_DATE
+
+CONFIG="$HOME/.config/schedule/config.json"
+NPI="$HOME/.local/bin/npi-schedule"
+
+if [ ! -f "$CONFIG" ]; then
+    echo "Ошибка: $CONFIG не найден" >&2
+    echo "Запустите 'make setup' или создайте config.json вручную." >&2
+    exit 1
+fi
+
+FACULT="${FACULT:-$(python3 -c "import json; print(json.load(open('$CONFIG'))['faculty'])")}"
+GROUP="${GROUP:-$(python3 -c "import json; print(json.load(open('$CONFIG'))['group'])")}"
+COURSE="${COURSE:-$(python3 -c "import json; print(json.load(open('$CONFIG'))['course'])")}"
+
+exec "$NPI" s -f "$FACULT" -g "$GROUP" -c "$COURSE" "$@"

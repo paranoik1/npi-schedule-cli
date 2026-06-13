@@ -1,46 +1,36 @@
 #!/bin/bash
-schedule=~/.local/bin/schedule
-# Функция для проверки соединения с интернетом
-check_internet() {
-  ping -q -c 2 google.com > /dev/null 2>&1
-  return $?
-}
+# Фоновое получение расписания.
+# Запускается systemd-сервисом schedule.service.
 
-DIR_INFO=$HOME/.config/schedule/
-if [ ! -d "$DIR_INFO" ]; then
-  mkdir -p "$DIR_INFO"
-  echo "Директория '$DIR_INFO' была создана."
+SCHEDULE_CMD="$HOME/.local/bin/_schedule_opts"
+SCHEDULE_DIR="$HOME/.config/schedule"
+MAX_COL_WIDTH=200
+
+if [ ! -f "$SCHEDULE_CMD" ]; then
+    SCHEDULE_CMD="$HOME/.local/bin/npi-schedule"
 fi
 
-echo $PATH
-# Ждем соединения с интернетом
-echo "Waiting for internet connection..."
-while ! check_internet; do
-  sleep 5
+mkdir -p "$SCHEDULE_DIR"
+
+# Ожидание интернета
+echo "Ожидание интернет-соединения..."
+while ! ping -q -c 1 google.com > /dev/null 2>&1; do
+    sleep 5
 done
-echo "Internet connection established."
+echo "Соединение установлено."
 
-# Проверка файла schedule/today
-# today=$(date +%Y-%m-%d)
-schedule_file="$DIR_INFO/today"
-
-# if [ -f "$schedule_file" ]; then
-#   file_date=$(stat -c %y "$schedule_file" | cut -d ' ' -f 1)
-#   if [ "$file_date" == "$today" ]; then
-#     echo "Расписание уже было получено"
-#     exit 0
-#   fi
-# fi
-
-# Цикл: пытаемся получить расписание, пока не получится
-echo "Получение нового расписания..."
+# Получение расписания (с повторными попытками)
+echo "Получение расписания..."
 while true; do
-  if $schedule -m 40 > "$schedule_file" && \
-     $schedule -m 40 -d "$(date -d "+1 day" +"%Y-%m-%d")" > "$DIR_INFO/tomorrow"; then
-    echo "Расписание успешно получено."
-    break
-  else
-    echo "Не удалось получить расписание. Повторная попытка через 10 секунд..."
-    sleep 10
-  fi
+    TODAY=$(date +%Y-%m-%d)
+    TOMORROW=$(date -d "+1 day" +%Y-%m-%d 2>/dev/null || date -v+1d +%Y-%m-%d)
+
+    if $SCHEDULE_CMD -m "$MAX_COL_WIDTH" > "$SCHEDULE_DIR/today" 2>/dev/null; then
+        $SCHEDULE_CMD -m "$MAX_COL_WIDTH" -d "$TOMORROW" > "$SCHEDULE_DIR/tomorrow" 2>/dev/null
+        echo "Расписание сохранено."
+        break
+    else
+        echo "Не удалось получить расписание. Повтор через 10с..."
+        sleep 10
+    fi
 done

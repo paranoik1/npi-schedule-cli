@@ -1,3 +1,4 @@
 {
-  "count": 84
+    "serverPort": 8501,
+    "refreshInterval": 300000
 }

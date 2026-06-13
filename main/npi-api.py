@@ -1,6 +1,6 @@
-#!./.venv/bin/python
+#!/usr/bin/env python3
 from argparse import ArgumentParser, RawTextHelpFormatter
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Callable
 
 import pandas as pd
@@ -82,6 +82,7 @@ def get_args():
     )
     student_parser.add_argument("-c", "--course", help="Курс", default=1)
     student_parser.add_argument("-0", "--finals-schedule", action="store_true", help="Расписание зачетной недели", default=False, )
+    student_parser.add_argument("-t", "--tomorrow", action="store_true", help="Расписание на завтра", default=False)
     add_argument_date(student_parser)
     add_argument_max_col_width(student_parser)
 
@@ -202,7 +203,7 @@ def __print_schedule(data: dict, date: str, append_function: Callable[[dict, lis
 
 def print_student_schedule(group: str, facult: str, course: int | str, date: str, is_finals_schedule: bool = False):
     data = get_json_response(
-        f"v2/faculties/{facult}/years/{course}/groups/{group}/{"finals-schedule" if is_finals_schedule else "schedule"}" 
+        f"v2/faculties/{facult}/years/{course}/groups/{group}/{'finals-schedule' if is_finals_schedule else 'schedule'}" 
     )
 
     if is_finals_schedule:
@@ -217,7 +218,7 @@ def print_student_schedule(group: str, facult: str, course: int | str, date: str
                     lesson["lecturer"],
                 ]
             ),
-            columns=["Период", "Аудитория", "Дисциплина", "Прдподаватель"],
+            columns=["Период", "Аудитория", "Дисциплина", "Преподаватель"],
             data_info=data
         )
     else:
@@ -232,7 +233,7 @@ def print_student_schedule(group: str, facult: str, course: int | str, date: str
                     lesson["lecturer"],
                 ]
             ),
-            columns=["Начало", "Аудитория", "Дисциплина", "Прдподаватель"]
+            columns=["Начало", "Аудитория", "Дисциплина", "Преподаватель"]
         )
 
 
@@ -289,19 +290,33 @@ def print_found_auditoriums(query: str):
             print(auditorium, type)
 
 
-args = get_args()
-subcommand = args.subcommand
-max_column_width = args.max_col_width
+def main():
+    global max_column_width
+    
+    args = get_args()
+    subcommand = args.subcommand
+    max_column_width = args.max_col_width
 
-if subcommand in SUBCOMMANDS_ALIASES[0]:
-    print_student_schedule(args.group, args.facult, args.course, args.date, args.finals_schedule)
-elif subcommand in SUBCOMMANDS_ALIASES[1]:
-    if args.function == "search":
-        print_found_lecturers(args.query)
-    else:
+    if hasattr(args, "tomorrow") and args.tomorrow:
+        args.date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+
+    if subcommand in SUBCOMMANDS_ALIASES[0]:
+        print_student_schedule(args.group, args.facult, args.course, args.date, args.finals_schedule)
+    
+    elif subcommand in SUBCOMMANDS_ALIASES[1]:
+        if args.function == "search":
+            print_found_lecturers(args.query)
+            return
+        
         print_lecturer_schedule(args.lecturer, args.date)
-elif subcommand in SUBCOMMANDS_ALIASES[2]:
-    if args.function == "search":
-        print_found_auditoriums(args.query)
-    else:
+
+    elif subcommand in SUBCOMMANDS_ALIASES[2]:
+        if args.function == "search":
+            print_found_auditoriums(args.query)
+            return
+        
         print_auditorium_schedule(args.auditorium, args.date)
+
+
+if __name__ == '__main__':
+    main()

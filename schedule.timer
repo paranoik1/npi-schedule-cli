@@ -1,0 +1,8 @@
+[Unit]
+Description=Запуск получения расписания НПИ через 10с после загрузки
+
+[Timer]
+OnBootSec=10s
+
+[Install]
+WantedBy=default.target

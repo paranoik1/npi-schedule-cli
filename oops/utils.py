@@ -1,18 +1,22 @@
 from argparse import ArgumentParser
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pandas
 
 pandas.options.display.expand_frame_repr = False
 
 
-SUBCOMMANDS_ALIASES = [("schedule", "s"), ("lecturers", "l"), ("auditoriums", "a")]
+SUBCOMMANDS_ALIASES = [("student", "s"), ("lecturers", "l"), ("auditoriums", "a")]
 NOW_DATE = datetime.now().strftime("%Y-%m-%d")
 TIMES = {1: "9:00", 2: "10:45", 3: "13:15", 4: "15:00", 5: "16:45", 6: "18:30"}
 
 
 def get_time(lesson_class: int) -> str | None:
     return TIMES.get(lesson_class)
+
+
+def get_tomorrow_date() -> str:
+    return (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 
 
 def add_argument_date(parser: ArgumentParser) -> None:

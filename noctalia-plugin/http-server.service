@@ -1,0 +1,12 @@
+[Unit]
+Description=NPI Schedule HTTP server (для QML плагина NoctaliaShell)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/schedule-httpd
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

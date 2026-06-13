@@ -8,57 +8,53 @@ import qs.Widgets
 DraggableDesktopWidget {
     id: root
 
-    // Обязательное свойство для API плагина
     property var pluginApi: null
 
-    // Пути к файлам. ЗАМЕНИТЕ 'ВАШ_ЮЗЕРНЕЙМ' на ваше реальное имя пользователя!
-    // Пример: "file:///home/alex/.config/schedule/today"
-    property string serverUrl: "http://0.0.0.0:8000/"
+    property string serverUrl: "http://127.0.0.1:8501/"
     property string todayPath: serverUrl + "today"
-        
     property string tomorrowPath: serverUrl + "tomorrow"
 
-    // Состояние для хранения прочитанного текста
     property string todayContent: "Загрузка..."
     property string tomorrowContent: "Загрузка..."
 
-    // Динамический расчет размеров на основе контента + отступы, с учетом масштабирования
-    implicitWidth: Math.round(contentLayout.implicitWidth * widgetScale)
-    implicitHeight: Math.round(contentLayout.implicitHeight * widgetScale)
-    
-    width: implicitWidth
-    height: implicitHeight
+    property int baseWidth: 420
+    property int baseHeight: 300
 
-    // Функция для асинхронного чтения файла
+    implicitWidth: Math.round(baseWidth * widgetScale)
+    implicitHeight: Math.round(baseHeight * widgetScale)
+
     function loadSchedule(filePath, targetProperty) {
         var xhr = new XMLHttpRequest();
-        Logger.i('!!!!!!!!!!!!!!!NPI SHEDULE!!!!!!!!!!!!!!')
-        Logger.i(widgetData.tomorrowPath);
         xhr.onreadystatechange = function() {
-            Logger.i('Status code: ' + xhr.status + ". State: " + xhr.readyState)
-
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 if (xhr.status === 200 || xhr.status === 0) {
                     var text = xhr.responseText.trim();
                     root[targetProperty] = text === "" ? "Нет событий" : text;
-                    Logger.i(root[targetProperty])
                 } else {
-                    root[targetProperty] = "Файл не найден.\nПроверьте путь:\n" + filePath.replace("file://", "");
+                    root[targetProperty] = "Ошибка загрузки\n" + filePath;
                 }
-            } 
+            }
         };
         xhr.open("GET", filePath, true);
         xhr.send();
-
     }
 
-    // Загрузка при старте
+    function initSettings() {
+        if (!pluginApi || !pluginApi.settings)
+            return;
+
+        var port = pluginApi.settings.serverPort || 8501;
+        serverUrl = "http://127.0.0.1:" + port + "/";
+        todayPath = serverUrl + "today";
+        tomorrowPath = serverUrl + "tomorrow";
+    }
+
     Component.onCompleted: {
+        initSettings();
         loadSchedule(root.todayPath, "todayContent");
         loadSchedule(root.tomorrowPath, "tomorrowContent");
     }
 
-    // Автообновление каждые 5 минут (300000 мс)
     Timer {
         interval: 300000
         running: true
@@ -69,14 +65,12 @@ DraggableDesktopWidget {
         }
     }
 
-    // Основной контейнер контента
     ColumnLayout {
         id: contentLayout
         anchors.fill: parent
         anchors.margins: Math.round(Style.marginL * widgetScale)
         spacing: Math.round(Style.marginM * widgetScale)
 
-        // --- СЕКЦИЯ: СЕГОДНЯ ---
         NText {
             text: "Сегодня"
             pointSize: Math.round(Style.fontSizeL * widgetScale)
@@ -89,7 +83,7 @@ DraggableDesktopWidget {
             text: root.todayContent
             pointSize: Math.round(Style.fontSizeM * widgetScale)
             color: Color.mOnSurface
-            font.family: "monospace" 
+            font.family: "monospace"
             opacity: root.isScaling ? 0.7 : 1.0
             Behavior on opacity {
                 enabled: !root.isScaling && !root.isDragging
@@ -97,7 +91,6 @@ DraggableDesktopWidget {
             }
         }
 
-        // Разделитель
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: Math.round(1 * widgetScale)
@@ -107,13 +100,11 @@ DraggableDesktopWidget {
             opacity: 0.5
         }
 
-        // --- СЕКЦИЯ: ЗАВТРА ---
         NText {
             text: "Завтра"
             pointSize: Math.round(Style.fontSizeL * widgetScale)
             font.weight: Font.Bold
             color: Color.mPrimary
-            Layout.fillWidth: true
             Layout.alignment: Qt.AlignLeft
         }
 
@@ -121,12 +112,16 @@ DraggableDesktopWidget {
             text: root.tomorrowContent
             pointSize: Math.round(Style.fontSizeM * widgetScale)
             color: Color.mOnSurface
-            font.family: "monospace" 
+            font.family: "monospace"
             opacity: root.isScaling ? 0.7 : 1.0
             Behavior on opacity {
                 enabled: !root.isScaling && !root.isDragging
                 NumberAnimation { duration: 150 }
             }
+        }
+
+        Item {
+            Layout.fillHeight: true
         }
     }
 }

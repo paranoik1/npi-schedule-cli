@@ -2,7 +2,7 @@ from argparse import Namespace, RawTextHelpFormatter
 from typing import Any
 
 from core import ApiEndpoint, CliMethod
-from utils import SUBCOMMANDS_ALIASES, add_argument_date, get_time
+from utils import SUBCOMMANDS_ALIASES, add_argument_date, get_time, get_tomorrow_date
 
 FACULTIES = {
     "1": {"code": "ФГГНГД", "name": "Факультет геологии, горного и нефтегазового дела"},
@@ -49,11 +49,12 @@ class ScheduleMixin:
 
 class StudentScheduleCliMethod(ScheduleMixin, CliMethod):
     ALIASES = SUBCOMMANDS_ALIASES[0]
-    COLUMNS = ["Начало", "Аудитория", "Дисциплина", "Прдподаватель"]
+    COLUMNS = ["Начало", "Аудитория", "Дисциплина", "Преподаватель"]
 
     def __call__(self, args: Namespace) -> Any:
+        date = get_tomorrow_date() if getattr(args, "tomorrow", False) else args.date
         data = self.get_data(group=args.group, facult=args.facult, course=args.course)
-        self.print(data, args.date)
+        self.print(data, date)
 
     def _add_args(self):
         epilog = "Список кодов факультетов (-f):\n" + "\n".join(
@@ -75,6 +76,7 @@ class StudentScheduleCliMethod(ScheduleMixin, CliMethod):
             "-f", "--facult", help="Факультет", choices=FACULTIES.keys(), required=True
         )
         student_parser.add_argument("-c", "--course", help="Курс", default=1)
+        student_parser.add_argument("-t", "--tomorrow", action="store_true", help="Расписание на завтра", default=False)
         add_argument_date(student_parser)
 
     def _get_lesson(self, time: str, lesson: dict[str]):

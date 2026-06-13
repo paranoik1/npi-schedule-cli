@@ -8,7 +8,7 @@
 	- [ ] настройки (url python http.servr .config/schedule/)
 - [ ] Перенести conky конфиг в проект
 - [ ] Установочный скрипт со своими аргументами (make файл захуярить чи нет?)
-	- [ ] Перенос funcs/npi-tu.py в .local/bin/
+	- [x] Перенос main/npi-api.py в .local/bin/
 	- [ ] Установка conky или noctalia-shell плагина (на выбор пользователя)
 	- [ ] Установка сервиса и его запуск
 		- [ ] У сервиса поменять путь до скрипта (.local/bin/\_schedule_opts)

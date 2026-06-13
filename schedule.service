@@ -1,9 +1,11 @@
 [Unit]
-Description=NPI schedule service
+Description=NPI schedule service — фоновое получение расписания
+After=network.target
 
 [Service]
-ExecStart=sh ./schedule.sh
-OnBootSec=10s
+Type=oneshot
+ExecStart=%h/.local/bin/schedule.sh
+RemainAfterExit=yes
 
 [Install]
 WantedBy=default.target
