@@ -1,7 +1,7 @@
 BINDIR ?= $(HOME)/.local/bin
 CONFIGDIR ?= $(HOME)/.config/schedule
 SYSTEMDDIR ?= $(HOME)/.config/systemd/user
-PLUGINDIR ?= $(HOME)/.local/share/noctaliashell/plugins/npi-schedule-plugin
+PLUGINDIR ?= $(HOME)/.config/noctalia/plugins/npi-schedule-plugin
 CONKYDIR ?= $(HOME)/.config/conky
 
 FACULT ?=
