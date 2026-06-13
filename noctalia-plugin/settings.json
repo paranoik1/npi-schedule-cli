@@ -1,4 +1,3 @@
 {
-    "serverPort": 8501,
-    "refreshInterval": 300000
+    "serverPort": 8501
 }

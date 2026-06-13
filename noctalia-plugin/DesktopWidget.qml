@@ -10,15 +10,15 @@ DraggableDesktopWidget {
 
     property var pluginApi: null
 
-    property string serverUrl: "http://127.0.0.1:8501/"
-    property string todayPath: serverUrl + "today"
-    property string tomorrowPath: serverUrl + "tomorrow"
+    property string serverUrl
+    property string todayPath
+    property string tomorrowPath
 
     property string todayContent: "Загрузка..."
     property string tomorrowContent: "Загрузка..."
 
-    property int baseWidth: 420
-    property int baseHeight: 300
+    property int baseWidth: 120
+    property int baseHeight: 160
 
     implicitWidth: Math.round(baseWidth * widgetScale)
     implicitHeight: Math.round(baseHeight * widgetScale)

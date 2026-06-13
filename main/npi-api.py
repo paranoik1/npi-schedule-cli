@@ -72,7 +72,7 @@ def get_args():
     student_parser = subparsers.add_parser(
         SUBCOMMANDS_ALIASES[0][0],
         description="Расписание для студентов",
-        aliases=SUBCOMMANDS_ALIASES[0][0:],
+        aliases=SUBCOMMANDS_ALIASES[0][1:],
         epilog=epilog,
         formatter_class=RawTextHelpFormatter,
     )
@@ -88,47 +88,47 @@ def get_args():
 
 
     ### NOTE: Подкоманда для работы с лекторами ###
-    lectors_parser = subparsers.add_parser(
-        SUBCOMMANDS_ALIASES[1][0], aliases=SUBCOMMANDS_ALIASES[1][0:]
+    lecturers_parser = subparsers.add_parser(
+        SUBCOMMANDS_ALIASES[1][0], aliases=SUBCOMMANDS_ALIASES[1][1:]
     )
-    add_argument_max_col_width(lectors_parser)
-    lectors_subparsers = lectors_parser.add_subparsers(
+    add_argument_max_col_width(lecturers_parser)
+    lecturers_subparsers = lecturers_parser.add_subparsers(
         dest="function", required=True, help="Действия с лекторами"
     )
 
-    lector_searh_parser = lectors_subparsers.add_parser("search", help="Поиск лектора")
-    lector_searh_parser.add_argument(
+    lecturer_search_parser = lecturers_subparsers.add_parser("search", help="Поиск лектора")
+    lecturer_search_parser.add_argument(
         "query", help="Фамилия или часть фамилии для поиска"
     )
-    add_argument_max_col_width(lector_searh_parser)
+    add_argument_max_col_width(lecturer_search_parser)
 
-    lector_schedule_parser = lectors_subparsers.add_parser(
+    lecturer_schedule_parser = lecturers_subparsers.add_parser(
         "schedule", help="Получение расписания лектора"
     )
-    lector_schedule_parser.add_argument(
+    lecturer_schedule_parser.add_argument(
         "lecturer", help='Фамилия и инициалы лектора в формате "Фамилия И О"'
     )
-    add_argument_date(lector_schedule_parser)
-    add_argument_max_col_width(lector_schedule_parser)
+    add_argument_date(lecturer_schedule_parser)
+    add_argument_max_col_width(lecturer_schedule_parser)
 
 
     ### NOTE: Подкоманда для работы с аудиториями ###
     auditoriums_parser = subparsers.add_parser(
-        SUBCOMMANDS_ALIASES[2][0], aliases=SUBCOMMANDS_ALIASES[2][0:]
+        SUBCOMMANDS_ALIASES[2][0], aliases=SUBCOMMANDS_ALIASES[2][1:]
     )
-    add_argument_max_col_width(auditoriums_parser)  # <-- ДОБАВЛЕНО
+    add_argument_max_col_width(auditoriums_parser)
 
     auditoriums_subparsers = auditoriums_parser.add_subparsers(
         dest="function", required=True, help="Действия с аудиториями"
     )
 
-    auditorium_searh_parser = auditoriums_subparsers.add_parser(
+    auditorium_search_parser = auditoriums_subparsers.add_parser(
         "search", help="Поиск аудитории"
     )
-    auditorium_searh_parser.add_argument(
-        "query", help="Номер или часть номер для поиска"
+    auditorium_search_parser.add_argument(
+        "query", help="Номер или часть номера для поиска"
     )
-    add_argument_max_col_width(auditorium_searh_parser)  # <-- ДОБАВЛЕНО
+    add_argument_max_col_width(auditorium_search_parser)
 
     auditorium_schedule_parser = auditoriums_subparsers.add_parser(
         "schedule", help="Получение расписания аудитории"
@@ -286,8 +286,8 @@ def print_found_auditoriums(query: str):
 
     for corpus, auditoriums in data.items():
         print("Корпус:", corpus)
-        for auditorium, type in auditoriums:
-            print(auditorium, type)
+        for auditorium, room_type in auditoriums:
+            print(auditorium, room_type)
 
 
 def main():

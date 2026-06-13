@@ -1,7 +1,5 @@
 #!/bin/bash
 # Читает настройки из ~/.config/schedule/config.json и вызывает npi-schedule.
-# Позволяет переопределить аргументы через переменные окружения:
-#   FACULT, GROUP, COURSE, NPI_DATE
 
 CONFIG="$HOME/.config/schedule/config.json"
 NPI="$HOME/.local/bin/npi-schedule"
@@ -12,8 +10,10 @@ if [ ! -f "$CONFIG" ]; then
     exit 1
 fi
 
-FACULT="${FACULT:-$(python3 -c "import json; print(json.load(open('$CONFIG'))['faculty'])")}"
-GROUP="${GROUP:-$(python3 -c "import json; print(json.load(open('$CONFIG'))['group'])")}"
-COURSE="${COURSE:-$(python3 -c "import json; print(json.load(open('$CONFIG'))['course'])")}"
+CONFIG_DATA=$(cat "$CONFIG")
+
+FACULT="${FACULT:-$(echo "$CONFIG_DATA" | jq .faculty -r)}"
+GROUP="${GROUP:-$(echo "$CONFIG_DATA" | jq .group -r)}"
+COURSE="${COURSE:-$(echo "$CONFIG_DATA" | jq .course -r)}"
 
 exec "$NPI" s -f "$FACULT" -g "$GROUP" -c "$COURSE" "$@"

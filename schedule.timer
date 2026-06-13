@@ -3,6 +3,7 @@ Description=Запуск получения расписания НПИ чере
 
 [Timer]
 OnBootSec=10s
+OnCalendar=*-*-* 0:00:00
 
 [Install]
 WantedBy=default.target

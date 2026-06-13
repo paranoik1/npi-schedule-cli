@@ -103,5 +103,5 @@ class AuditoriumsPrinter(Printer):
     def __call__(self, data: Any) -> Any:
         for corpus, auditoriums in data.items():
             print("\nКорпус:", corpus)
-            for auditorium, type in auditoriums:
-                print(auditorium, type)
+            for auditorium, room_type in auditoriums:
+                print(auditorium, room_type)

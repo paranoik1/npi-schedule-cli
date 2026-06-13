@@ -4,37 +4,37 @@ SYSTEMDDIR ?= $(HOME)/.config/systemd/user
 PLUGINDIR ?= $(HOME)/.local/share/noctaliashell/plugins/npi-schedule
 CONKYDIR ?= $(HOME)/.config/conky
 
-FACULT ?= F
-GROUP ?= ИСПа
-COURSE ?= 3
-PORT ?= 8501
-DISPLAY ?= none
+FACULT ?=
+GROUP ?=
+COURSE ?=
+PORT ?=
+DISPLAY ?=
 
 PYTHON ?= python3
 SHELL := /bin/bash
 
-.PHONY: all setup install install-reqs install-bin install-config install-service install-plugin install-conky uninstall
+.PHONY: all setup install install-bin install-config install-service install-plugin install-conky uninstall
 
 all:
 	@echo "Цели:"
-	@echo "  make setup           — интерактивная установка (с запросом параметров)"
-	@echo "  make install         — установить все (FACULT=... GROUP=... COURSE=... PORT=... DISPLAY=plugin|conky|none)"
+	@echo "  make setup           — интерактивная установка (запросит все параметры)"
+	@echo "  make install         — установка (FACULT=... GROUP=... COURSE=... PORT=... DISPLAY=plugin|conky|none)"
 	@echo "  make install-plugin  — установить QML плагин для NoctaliaShell"
 	@echo "  make install-conky   — установить conky-конфиг"
 	@echo "  make uninstall       — удалить всё"
 	@echo ""
 	@echo "Параметры install:"
-	@echo "  FACULT=  код факультета (по умолч. F)"
-	@echo "  GROUP=   группа (по умолч. ИСПа)"
-	@echo "  COURSE=  курс (по умолч. 3)"
-	@echo "  PORT=    порт HTTP-сервера (по умолч. 8501)"
-	@echo "  DISPLAY= plugin | conky | none (по умолч. none)"
+	@echo "  FACULT=  код факультета (1-9, A, B, C, D, F)"
+	@echo "  GROUP=   группа (напр. ИСПа)"
+	@echo "  COURSE=  курс (1-4)"
+	@echo "  PORT=    порт HTTP-сервера"
+	@echo "  DISPLAY= plugin | conky | none"
 
 setup:
-	@read -p "Факультет (1-9, A, B, C, D, F) [F]: " f; \
-	 read -p "Группа [ИСПа]: " g; \
-	 read -p "Курс [3]: " c; \
-	 read -p "Порт HTTP-сервера [8501]: " p; \
+	@read -p "Факультет (1-9, A, B, C, D, F): " f; \
+	 read -p "Группа: " g; \
+	 read -p "Курс (1-4): " c; \
+	 read -p "Порт HTTP-сервера: " p; \
 	 echo ""; \
 	 echo "Выберите отображение:"; \
 	 echo "  1) NoctaliaShell QML-плагин"; \
@@ -47,16 +47,13 @@ setup:
 	   *) disp=none ;; \
 	 esac; \
 	 $(MAKE) install \
-	   FACULT="$${f:-F}" \
-	   GROUP="$${g:-ИСПа}" \
-	   COURSE="$${c:-3}" \
-	   PORT="$${p:-8501}" \
+	   FACULT="$$f" \
+	   GROUP="$$g" \
+	   COURSE="$$c" \
+	   PORT="$$p" \
 	   DISPLAY="$$disp"
 
-install: install-reqs install-bin install-config install-service install-display
-
-install-reqs:
-	$(PYTHON) -m pip install -r main/requirements.txt
+install: install-bin install-config install-service install-display
 
 install-bin:
 	install -d "$(BINDIR)"
@@ -65,6 +62,11 @@ install-bin:
 	install schedule.sh "$(BINDIR)/schedule.sh"
 
 install-config:
+	@if [ -z "$(FACULT)" ] || [ -z "$(GROUP)" ] || [ -z "$(COURSE)" ] || [ -z "$(PORT)" ]; then \
+	  echo "Ошибка: FACULT, GROUP, COURSE и PORT должны быть заданы." >&2; \
+	  echo "Используйте 'make setup' или 'make install FACULT=... GROUP=... COURSE=... PORT=...'" >&2; \
+	  exit 1; \
+	fi
 	install -d "$(CONFIGDIR)"
 	install scripts/_schedule_opts "$(BINDIR)/_schedule_opts"
 	@echo '{' > "$(CONFIGDIR)/config.json"
@@ -97,6 +99,9 @@ endif
 install-plugin:
 	install -d "$(PLUGINDIR)"
 	cp -r noctalia-plugin/* "$(PLUGINDIR)/"
+	@echo '{' > "$(PLUGINDIR)/settings.json"
+	@echo '    "serverPort": "$(PORT)"' >> "$(PLUGINDIR)/settings.json"
+	@echo '}' >> "$(PLUGINDIR)/settings.json"
 
 install-conky:
 	install -d "$(CONKYDIR)"
@@ -114,7 +119,7 @@ uninstall:
 	rm -f "$(SYSTEMDDIR)/schedule.timer"
 	rm -f "$(SYSTEMDDIR)/schedule-httpd.service"
 	rm -rf "$(PLUGINDIR)"
-	rm -f "$(CONKYDIR)/{base,colors,schedule}.lua"
+	rm -f "$(CONKYDIR)"/{base,colors,schedule}.lua
 	-systemctl --user daemon-reload
 	@echo "Конфиг $(CONFIGDIR) НЕ удалён (там могут быть сохранённые расписания)."
 	@echo "Чтобы удалить его вручную: rm -rf $(CONFIGDIR)"

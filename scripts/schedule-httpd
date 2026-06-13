@@ -9,7 +9,7 @@ CONFIG_FILE="$SCHEDULE_DIR/config.json"
 PORT=8501
 
 if [ -f "$CONFIG_FILE" ]; then
-    CONFIG_PORT=$(python3 -c "import json; print(json.load(open('$CONFIG_FILE'))['port'])" 2>/dev/null)
+    CONFIG_PORT=$(jq .port -r < "$CONFIG_FILE" 2>/dev/null)
     if [ -n "$CONFIG_PORT" ]; then
         PORT=$CONFIG_PORT
     fi

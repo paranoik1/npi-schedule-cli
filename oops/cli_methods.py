@@ -102,8 +102,8 @@ class LecturersSearchCliMethod(CliMethod):
         self.print(data)
 
     def _add_args(self):
-        lector_searh_parser = self.subparsers.add_parser("search", help="Поиск лектора")
-        lector_searh_parser.add_argument(
+        lecturer_search_parser = self.subparsers.add_parser("search", help="Поиск лектора")
+        lecturer_search_parser.add_argument(
             "query", help="Фамилия или часть фамилии для поиска"
         )
 
@@ -152,11 +152,11 @@ class AuditoriumsSearchCliMethod(CliMethod):
         self.print(data)
 
     def _add_args(self):
-        auditorium_searh_parser = self.subparsers.add_parser(
+        auditorium_search_parser = self.subparsers.add_parser(
             "search", help="Поиск аудитории"
         )
-        auditorium_searh_parser.add_argument(
-            "query", help="Номер или часть номер для поиска"
+        auditorium_search_parser.add_argument(
+            "query", help="Номер или часть номера для поиска"
         )
 
     @classmethod
