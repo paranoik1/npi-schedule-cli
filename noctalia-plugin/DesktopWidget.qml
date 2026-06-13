@@ -17,11 +17,8 @@ DraggableDesktopWidget {
     property string todayContent: "Загрузка..."
     property string tomorrowContent: "Загрузка..."
 
-    property int baseWidth: 120
-    property int baseHeight: 160
-
-    implicitWidth: Math.round(baseWidth * widgetScale)
-    implicitHeight: Math.round(baseHeight * widgetScale)
+    implicitWidth: Math.round((contentLayout.implicitWidth + 10) * widgetScale)
+    implicitHeight: Math.round(contentLayout.implicitHeight * widgetScale)
 
     function loadSchedule(filePath, targetProperty) {
         var xhr = new XMLHttpRequest();
@@ -40,11 +37,18 @@ DraggableDesktopWidget {
     }
 
     function initSettings() {
-        if (!pluginApi || !pluginApi.settings)
+        Logger.d('==============Init Sttings================')
+        Logger.d(pluginApi)
+        Logger.d(pluginApi.pluginSettings)
+        
+        if (!pluginApi || !pluginApi.pluginSettings) {
+            Logger.d('Skip init')
             return;
+        }
 
-        var port = pluginApi.settings.serverPort || 8501;
+        var port = pluginApi.pluginSettings.serverPort || 8501;
         serverUrl = "http://127.0.0.1:" + port + "/";
+        Logger.d("ServerURL: " + serverUrl)
         todayPath = serverUrl + "today";
         tomorrowPath = serverUrl + "tomorrow";
     }
@@ -56,7 +60,7 @@ DraggableDesktopWidget {
     }
 
     Timer {
-        interval: 300000
+        interval: 60000 * 5
         running: true
         repeat: true
         onTriggered: {

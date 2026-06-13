@@ -1,13 +1,13 @@
 BINDIR ?= $(HOME)/.local/bin
 CONFIGDIR ?= $(HOME)/.config/schedule
 SYSTEMDDIR ?= $(HOME)/.config/systemd/user
-PLUGINDIR ?= $(HOME)/.local/share/noctaliashell/plugins/npi-schedule
+PLUGINDIR ?= $(HOME)/.local/share/noctaliashell/plugins/npi-schedule-plugin
 CONKYDIR ?= $(HOME)/.config/conky
 
 FACULT ?=
 GROUP ?=
 COURSE ?=
-PORT ?=
+PORT ?= 8501
 DISPLAY ?=
 
 PYTHON ?= python3
@@ -34,7 +34,7 @@ setup:
 	@read -p "Факультет (1-9, A, B, C, D, F): " f; \
 	 read -p "Группа: " g; \
 	 read -p "Курс (1-4): " c; \
-	 read -p "Порт HTTP-сервера: " p; \
+	 read -p "Порт HTTP-сервера [8501]: " p; \
 	 echo ""; \
 	 echo "Выберите отображение:"; \
 	 echo "  1) NoctaliaShell QML-плагин"; \
@@ -50,7 +50,7 @@ setup:
 	   FACULT="$$f" \
 	   GROUP="$$g" \
 	   COURSE="$$c" \
-	   PORT="$$p" \
+	   PORT="$${p:-8501}" \
 	   DISPLAY="$$disp"
 
 install: install-bin install-config install-service install-display
@@ -78,23 +78,23 @@ install-config:
 
 install-service:
 	install -d "$(SYSTEMDDIR)"
-# 	sed "s|%h|$(HOME)|g" schedule.service > "$(SYSTEMDDIR)/schedule.service"
-# 	sed "s|%h|$(HOME)|g" schedule.timer > "$(SYSTEMDDIR)/schedule.timer"
-# 	sed "s|%h|$(HOME)|g" noctalia-plugin/http-server.service > "$(SYSTEMDDIR)/schedule-httpd.service"
-	-systemctl --user daemon-reload
+	cp schedule.service "$(SYSTEMDDIR)/schedule.service"
+	cp schedule.timer "$(SYSTEMDDIR)/schedule.timer"
+	cp noctalia-plugin/http-server.service "$(SYSTEMDDIR)/schedule-httpd.service"
+	systemctl --user daemon-reload
 
 install-display:
 ifeq ($(DISPLAY),plugin)
 	$(MAKE) install-plugin
-	-systemctl --user enable --now schedule-httpd.service 2>/dev/null || true
+	systemctl --user enable --now schedule-httpd.service
 	@echo "HTTP-сервер запущен на порту $(PORT)"
 else ifeq ($(DISPLAY),conky)
 	$(MAKE) install-conky
 else
 	@echo "Отображение не настроено. Запустите 'make install-plugin' или 'make install-conky' позже."
 endif
-	-systemctl --user enable --now schedule.timer 2>/dev/null || true
-	-systemctl --user enable --now schedule.service 2>/dev/null || true
+	systemctl --user enable --now schedule.timer
+	systemctl --user enable --now schedule.service
 
 install-plugin:
 	install -d "$(PLUGINDIR)"
@@ -102,6 +102,7 @@ install-plugin:
 	@echo '{' > "$(PLUGINDIR)/settings.json"
 	@echo '    "serverPort": "$(PORT)"' >> "$(PLUGINDIR)/settings.json"
 	@echo '}' >> "$(PLUGINDIR)/settings.json"
+	python scripts/manage_noctalia_plugin.py install
 
 install-conky:
 	install -d "$(CONKYDIR)"
@@ -120,6 +121,7 @@ uninstall:
 	rm -f "$(SYSTEMDDIR)/schedule-httpd.service"
 	rm -rf "$(PLUGINDIR)"
 	rm -f "$(CONKYDIR)"/{base,colors,schedule}.lua
+	python scripts/manage_noctalia_plugin.py uninstall
 	-systemctl --user daemon-reload
 	@echo "Конфиг $(CONFIGDIR) НЕ удалён (там могут быть сохранённые расписания)."
 	@echo "Чтобы удалить его вручную: rm -rf $(CONFIGDIR)"
