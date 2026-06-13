@@ -144,6 +144,7 @@ def get_json_response(url: str, *args, **kwargs):
     response = req.get(
         url if url.startswith("http") else API_URL + url, *args, **kwargs
     )
+
     return response.json()
 
 

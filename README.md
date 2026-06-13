@@ -32,7 +32,7 @@ make uninstall
 ### Зависимости
 
 - Python 3.11+
-- `jq` (для `_schedule_opts`)
+- `jq` (для парсинга конфигурации)
 - `python-requests`, `python-pandas`
 
 Установка через пакетный менеджер вашего дистрибутива. Пример для Arch:
@@ -129,10 +129,17 @@ npi-schedule a schedule 310ГЛ -d 2025-09-01,2025-09-02
 
 Порт по умолчанию: 8501 (можно изменить при установке).
 
+После установки плагина перезагрузите Noctalia Shell, чтобы он появился в списке виджетов.
+
 ## Conky-виджет
 
 Конфиг `conky/schedule.lua` (вместе с `base.lua`, `colors.lua`) отображает расписание на рабочем столе.
 Установка: `make install-conky`
+
+Запуск:
+```bash
+conky -f ~/.config/conky/schedule.lua
+```
 
 ## Фоновая служба
 
